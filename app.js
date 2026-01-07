@@ -3,6 +3,20 @@ tg.expand();
 tg.enableClosingConfirmation();
 tg.BackButton.hide();
 
+// Adjust spacing for Telegram header
+const headerOffset = tg.headerColor ? 10 : 0;
+if (headerOffset > 0) {
+  const spacer = document.querySelector('.spacer-top');
+  if (spacer) {
+    spacer.style.height = `${70 + headerOffset}px`;
+  }
+  document.body.style.paddingTop = `${134 + headerOffset}px`;
+  const topPanel = document.querySelector('.top-panel');
+  if (topPanel) {
+    topPanel.style.top = `${70 + headerOffset}px`;
+  }
+}
+
 const STORAGE_KEY = 'timetrackerkey';
 const ACTIVITIES_KEY = 'activities';
 const HISTORY_KEY = 'history';
@@ -439,7 +453,9 @@ function setupSwipeToDelete() {
   let touchStartY = 0;
   let isSwiping = false;
   let currentWrapper = null;
+  let currentCard = null;
   let startTime = 0;
+  let animationFrame = null;
 
   document.querySelectorAll('.activity-card-wrapper').forEach(wrapper => {
     const card = wrapper.querySelector('.activity-card');
@@ -449,11 +465,14 @@ function setupSwipeToDelete() {
       touchStartY = e.touches[0].clientY;
       isSwiping = false;
       currentWrapper = wrapper;
+      currentCard = card;
       startTime = Date.now();
+      // Remove transition during swipe for smooth movement
+      card.style.transition = 'none';
     });
 
     card.addEventListener('touchmove', (e) => {
-      if (!currentWrapper) return;
+      if (!currentWrapper || !currentCard) return;
       
       const touchX = e.touches[0].clientX;
       const touchY = e.touches[0].clientY;
@@ -465,41 +484,59 @@ function setupSwipeToDelete() {
         isSwiping = true;
         e.preventDefault();
         
+        // Cancel any pending animation
+        if (animationFrame) {
+          cancelAnimationFrame(animationFrame);
+        }
+        
         // Only allow left swipe (reveal delete)
         if (diffX > 0) {
-          const translateX = Math.min(diffX, 80);
+          // Use easing for smoother feel
+          const maxSwipe = 80;
+          const rawTranslate = Math.min(diffX, maxSwipe);
+          // Apply easing function for smoother movement
+          const easeOut = 1 - Math.pow(1 - (rawTranslate / maxSwipe), 3);
+          const translateX = rawTranslate * 0.7 + maxSwipe * 0.3 * easeOut;
+          
           currentWrapper.classList.add('swiping');
-          card.style.transform = `translateX(-${translateX}px)`;
+          currentCard.style.transform = `translateX(-${translateX}px)`;
         } else if (diffX < -10) {
-          // Swipe right - reset
+          // Swipe right - reset smoothly
           currentWrapper.classList.remove('swiping');
-          card.style.transform = '';
+          currentCard.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+          currentCard.style.transform = '';
         }
       }
     });
 
     card.addEventListener('touchend', (e) => {
-      if (!currentWrapper) return;
+      if (!currentWrapper || !currentCard) return;
       
       const touchEndX = e.changedTouches[0].clientX;
       const diffX = touchStartX - touchEndX;
       const swipeTime = Date.now() - startTime;
       
+      // Restore transition for smooth return
+      currentCard.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      
       if (isSwiping) {
         if (diffX > 50 || (diffX > 30 && swipeTime < 200)) {
           // Swipe threshold met, delete activity
-          const activityId = card.dataset.id;
+          const activityId = currentCard.dataset.id;
           tg.HapticFeedback.impactOccurred('medium');
+          // Keep it open for delete
+          currentCard.style.transform = 'translateX(-80px)';
           openDeleteModal(activityId);
+        } else {
+          // Reset position smoothly
+          currentWrapper.classList.remove('swiping');
+          currentCard.style.transform = '';
         }
-        
-        // Reset position
-        currentWrapper.classList.remove('swiping');
-        card.style.transform = '';
       }
       
       isSwiping = false;
       currentWrapper = null;
+      currentCard = null;
     });
   });
 }
@@ -541,6 +578,7 @@ function setupHistorySwipeToDelete() {
   let touchStartY = 0;
   let isSwiping = false;
   let currentWrapper = null;
+  let currentItem = null;
   let startTime = 0;
   let hasSwiped = false;
 
@@ -553,11 +591,14 @@ function setupHistorySwipeToDelete() {
       isSwiping = false;
       hasSwiped = false;
       currentWrapper = wrapper;
+      currentItem = item;
       startTime = Date.now();
+      // Remove transition during swipe for smooth movement
+      item.style.transition = 'none';
     }, { passive: true });
 
     item.addEventListener('touchmove', (e) => {
-      if (!currentWrapper) return;
+      if (!currentWrapper || !currentItem) return;
       
       const touchX = e.touches[0].clientX;
       const touchY = e.touches[0].clientY;
@@ -572,46 +613,53 @@ function setupHistorySwipeToDelete() {
         
         // Only allow left swipe (reveal delete)
         if (diffX > 0) {
-          const translateX = Math.min(diffX, 80);
+          // Use easing for smoother feel
+          const maxSwipe = 80;
+          const rawTranslate = Math.min(diffX, maxSwipe);
+          // Apply easing function for smoother movement
+          const easeOut = 1 - Math.pow(1 - (rawTranslate / maxSwipe), 3);
+          const translateX = rawTranslate * 0.7 + maxSwipe * 0.3 * easeOut;
+          
           currentWrapper.classList.add('swiping');
-          item.style.transform = `translateX(-${translateX}px)`;
+          currentItem.style.transform = `translateX(-${translateX}px)`;
         } else if (diffX < -10) {
-          // Swipe right - reset
+          // Swipe right - reset smoothly
           currentWrapper.classList.remove('swiping');
-          item.style.transform = '';
+          currentItem.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+          currentItem.style.transform = '';
         }
       }
     }, { passive: false });
 
     item.addEventListener('touchend', (e) => {
-      if (!currentWrapper) return;
+      if (!currentWrapper || !currentItem) return;
       
       const touchEndX = e.changedTouches[0].clientX;
       const diffX = touchStartX - touchEndX;
       const swipeTime = Date.now() - startTime;
       
+      // Restore transition for smooth return
+      currentItem.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      
       if (isSwiping || hasSwiped) {
         if (diffX > 50 || (diffX > 30 && swipeTime < 200)) {
           // Swipe threshold met, delete history item
-          const historyId = item.dataset.id;
+          const historyId = currentItem.dataset.id;
           tg.HapticFeedback.impactOccurred('medium');
+          // Keep it open for delete
+          currentItem.style.transform = 'translateX(-80px)';
           openDeleteHistoryModal(historyId);
         } else {
-          // Animate back if not enough swipe
-          item.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-          item.style.transform = '';
-          setTimeout(() => {
-            item.style.transition = '';
-          }, 300);
+          // Reset position smoothly
+          currentWrapper.classList.remove('swiping');
+          currentItem.style.transform = '';
         }
-        
-        // Reset position
-        currentWrapper.classList.remove('swiping');
       }
       
       isSwiping = false;
       hasSwiped = false;
       currentWrapper = null;
+      currentItem = null;
     }, { passive: true });
   });
 }
