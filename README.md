@@ -62,5 +62,5 @@ python -m http.server 8000
 npx http-server
 ```
 
-Затем откройте `http://localhost:8000` в браузере.
+
 
