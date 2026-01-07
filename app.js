@@ -10,7 +10,7 @@ if (headerOffset > 0) {
   if (spacer) {
     spacer.style.height = `${90 + headerOffset}px`;
   }
-  document.body.style.paddingTop = `${134 + headerOffset}px`;
+  document.body.style.paddingTop = `${154 + headerOffset}px`;
   const topPanel = document.querySelector('.top-panel');
   if (topPanel) {
     topPanel.style.top = `${90 + headerOffset}px`;
