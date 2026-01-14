@@ -8,12 +8,12 @@ const headerOffset = tg.headerColor ? 10 : 0;
 if (headerOffset > 0) {
   const spacer = document.querySelector('.spacer-top');
   if (spacer) {
-    spacer.style.height = `${90 + headerOffset}px`;
+    spacer.style.height = `${70 + headerOffset}px`;
   }
-  document.body.style.paddingTop = `${154 + headerOffset}px`;
+  document.body.style.paddingTop = `${134 + headerOffset}px`;
   const topPanel = document.querySelector('.top-panel');
   if (topPanel) {
-    topPanel.style.top = `${90 + headerOffset}px`;
+    topPanel.style.top = `${70 + headerOffset}px`;
   }
 }
 
@@ -425,9 +425,8 @@ function renderActivities() {
             </div>
           </div>
           <div class="progress-bar-container">
-            <div class="progress-bar ${percentage < 10 ? 'low' : ''}" style="width: ${Math.max(percentage, 0)}%">
-              <span class="progress-percentage">${percentage.toFixed(0)}%</span>
-            </div>
+            <div class="progress-bar ${percentage < 10 ? 'low' : ''}" style="width: ${Math.max(percentage, 0)}%"></div>
+            <span class="progress-percentage">${percentage.toFixed(0)}%</span>
           </div>
         </div>
       </div>
